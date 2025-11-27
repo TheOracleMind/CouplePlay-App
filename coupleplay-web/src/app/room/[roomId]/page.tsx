@@ -24,6 +24,8 @@ export default function RoomPage() {
   const [saving, setSaving] = useState(false);
   const [draftAnswers, setDraftAnswers] = useState<Record<string, string>>({});
   const [lastSentAnswers, setLastSentAnswers] = useState<Record<string, string>>({});
+  const [viewKey, setViewKey] = useState(0);
+  const [turnKey, setTurnKey] = useState(0);
 
   const stageStartedRef = useRef(false);
 
@@ -73,6 +75,7 @@ export default function RoomPage() {
 
   useEffect(() => {
     stageStartedRef.current = room?.stage === "collect" ? stageStartedRef.current : false;
+    setViewKey((v) => v + 1);
   }, [room?.stage]);
 
   // Safety: if all questions are done, move to review.
@@ -96,6 +99,10 @@ export default function RoomPage() {
     }, 1000);
     return () => clearInterval(interval);
   }, [supabase, roomId]);
+
+  useEffect(() => {
+    setTurnKey((k) => k + 1);
+  }, [room?.current_question_id]);
 
   useEffect(() => {
     if (!supabase || !roomId) return;
@@ -389,23 +396,13 @@ export default function RoomPage() {
 
     return (
       <header className="rounded-3xl bg-gradient-to-br from-[#1b2437] via-[#141c2f] to-[#0f172a] p-6 shadow-[0_20px_70px_rgba(0,0,0,0.4)]">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <p className="text-sm uppercase tracking-wide text-white/70">Private room</p>
-            <h1 className="mt-1 text-3xl font-semibold">CouplePlay Session</h1>
-            {room?.game && <p className="text-sm text-white/70">{gameLabel[room.game]}</p>}
-          </div>
-          <div className="flex flex-wrap gap-3 text-xs font-semibold uppercase tracking-wide text-white/80">
-            <span className="rounded-full bg-white/10 px-3 py-2">Live</span>
-            {room?.stage && <span className="rounded-full bg-white/10 px-3 py-2">Stage: {room.stage}</span>}
-            {room?.hide_questions && (
-              <span className="rounded-full bg-white/10 px-3 py-2">Hidden questions in stage 1</span>
-            )}
-          </div>
+        <div className="space-y-2">
+          <p className="text-sm uppercase tracking-wide text-white/70">Private room</p>
+          <h1 className="text-3xl font-semibold text-white">CouplePlay Session</h1>
+          {room?.game && <p className="text-sm text-white/75">{gameLabel[room.game]}</p>}
         </div>
-        <p className="mt-4 text-sm text-white/75">
-          Invite link already shared. Once both players join and finish stage 1, the turn-based answering begins. Rooms
-          expire after 1 hour of inactivity.
+        <p className="mt-3 text-sm text-white/75">
+          Share the link, add questions together, then take turns answering. We will guide you through each step.
         </p>
       </header>
     );
@@ -417,17 +414,6 @@ export default function RoomPage() {
 
     return (
       <section className="grid gap-4 rounded-3xl bg-white/5 p-5 shadow-2xl ring-1 ring-white/10 md:grid-cols-[2fr_1fr]">
-        <div className="space-y-3">
-          <p className="text-sm font-semibold text-white/80">Status</p>
-          <div className="flex flex-wrap gap-2 text-sm text-white/80">
-            <Badge active={Boolean(room)}>Room ready</Badge>
-            <Badge active={players.length >= 1}>Host connected</Badge>
-            <Badge active={guestPresent}>Guest connected</Badge>
-            <Badge active={Boolean(currentPlayer)}>You are identified</Badge>
-          </div>
-          {error && <p className="rounded-xl bg-red-100/10 px-3 py-2 text-sm text-red-200">{error}</p>}
-          {loading && <p className="text-sm text-white/60">Loading room...</p>}
-        </div>
         {!currentPlayer && (
           <div className="space-y-3 rounded-2xl bg-black/50 p-4 ring-1 ring-white/10">
             <p className="text-base font-semibold">Join this room</p>
@@ -447,16 +433,27 @@ export default function RoomPage() {
             >
               {saving ? "Joining..." : "Join as player 2"}
             </button>
+            {error && <p className="rounded-xl bg-red-100/10 px-3 py-2 text-sm text-red-200">{error}</p>}
           </div>
         )}
         {currentPlayer && (
           <div className="space-y-2 rounded-2xl bg-black/30 p-4 ring-1 ring-white/10">
-            <p className="text-sm font-semibold">You</p>
-            <p className="text-base font-semibold text-white">{currentPlayer.name}</p>
-            <p className="text-xs text-white/70">Role: {currentPlayer.role}</p>
-            <p className="text-xs text-white/70">Share link stays active for 1 hour of inactivity.</p>
+            <p className="text-base font-semibold">You</p>
+            <p className="text-xl font-semibold text-white">{currentPlayer.name}</p>
+            <p className="text-xs text-white/70 capitalize">{currentPlayer.role}</p>
+            {guestPresent ? (
+              <p className="text-xs text-green-200">Your partner is here. Continue below.</p>
+            ) : (
+              <p className="text-xs text-white/70">Waiting for your partner to join.</p>
+            )}
           </div>
         )}
+        <div className="space-y-2 rounded-2xl bg-black/20 p-4 ring-1 ring-white/5">
+          <p className="text-sm font-semibold text-white/80">Flow</p>
+          <p className="text-xs text-white/70">Stage 1: add questions together.</p>
+          <p className="text-xs text-white/70">Stage 2: take turns answering.</p>
+          <p className="text-xs text-white/70">Stage 3: enjoy your recap.</p>
+        </div>
       </section>
     );
   }
@@ -573,7 +570,7 @@ export default function RoomPage() {
     const bothDone = writerDone && readerDone;
 
     return (
-      <section className="space-y-4">
+      <section key={turnKey} className="space-y-4 fade-in">
         <div className="rounded-3xl bg-white/90 p-5 text-slate-900 shadow-xl ring-1 ring-white/30">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -670,9 +667,7 @@ export default function RoomPage() {
           {ordered.map((q) => (
             <div key={q.id} className="rounded-2xl border border-slate-200 bg-white p-4">
               <p className="text-sm font-semibold text-slate-900">{q.text}</p>
-              <p className="text-xs text-slate-500">
-                Answered by {playerName(q.answering_player_id)} - {new Date(q.created_at).toLocaleString()}
-              </p>
+              <p className="text-xs text-slate-500">Answered by {playerName(q.answering_player_id)}</p>
               <p className="mt-2 whitespace-pre-wrap text-sm text-slate-700">{q.answer_text ?? "No answer"}</p>
             </div>
           ))}

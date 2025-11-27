@@ -123,7 +123,7 @@ export default function RoomPage() {
           body: JSON.stringify({ answer_text: writerDraft }),
         });
       }
-    }, 1000);
+    }, 500); // Reduced from 1000ms to 500ms for more responsive live typing
     return () => clearInterval(interval);
   }, [supabase, roomId, room?.current_question_id, draftAnswers, lastSentAnswers, currentPlayerId, questions]);
 
@@ -191,8 +191,18 @@ export default function RoomPage() {
       setDraftAnswers((prev) => {
         const next = { ...prev };
         fetchedQuestions.forEach((q) => {
-          if (typeof q.answer_text === "string" && !next[q.id]) {
-            next[q.id] = q.answer_text;
+          if (typeof q.answer_text === "string") {
+            // CRITICAL: Only update draft answers for questions being answered by OTHER players
+            // This prevents database updates from overwriting the writer's active typing
+            if (q.answering_player_id !== currentPlayerId) {
+              // It's the other player's turn - always update to show live typing
+              next[q.id] = q.answer_text;
+            } else if (!next[q.id]) {
+              // It's my turn but I haven't started typing yet - initialize from database
+              next[q.id] = q.answer_text;
+            }
+            // If it's my turn AND I already have a draft (next[q.id] exists),
+            // DO NOT overwrite with database value - preserve my active typing
           }
         });
         return next;
@@ -224,7 +234,24 @@ export default function RoomPage() {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "questions", filter: `room_id=eq.${roomId}` },
-        () => void refreshData({ skipLoading: true }),
+        (payload) => {
+          // Immediately update the question in state for live typing preview
+          if (payload.new) {
+            const updatedQuestion = payload.new as Question;
+            setQuestions((prev) =>
+              prev.map((q) => (q.id === updatedQuestion.id ? updatedQuestion : q))
+            );
+            // ONLY update draft answers for questions being answered by OTHER players (reader view)
+            // NEVER update draft answers for questions the current player is answering (writer view)
+            if (updatedQuestion.answering_player_id !== currentPlayerId && updatedQuestion.answer_text) {
+              setDraftAnswers((prev) => ({
+                ...prev,
+                [updatedQuestion.id]: updatedQuestion.answer_text ?? "",
+              }));
+            }
+          }
+          void refreshData({ skipLoading: true });
+        },
       )
       .subscribe();
 

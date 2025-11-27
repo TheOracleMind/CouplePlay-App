@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { GameSlug } from "@/lib/types";
+import { useLanguage } from "@/lib/i18n";
+import { Footer } from "@/components/Footer";
 
 type CreateRoomResponse =
   | { error: string }
@@ -11,32 +13,8 @@ type CreateRoomResponse =
       player: { id: string };
     };
 
-const games: Array<{
-  slug: GameSlug;
-  title: string;
-  gist: string;
-  detail: string;
-  emoji: string;
-}> = [
-  {
-    slug: "random-questions",
-    title: "Random Questions",
-    emoji: "💭",
-    gist: "Ask anything, answer together, and see what you both think.",
-    detail:
-      "First, you both add questions (keep them secret if you want!). Then, take turns answering while your partner watches you type.",
-  },
-  {
-    slug: "idea-matching",
-    title: "Idea Matching",
-    emoji: "✨",
-    gist: "Find out what you're both into without the awkward reveals.",
-    detail:
-      "Each of you votes yes or no on ideas. Only the ones you BOTH like get revealed at the end. Perfect for discovering shared interests!",
-  },
-];
-
 export default function Home() {
+  const { t } = useLanguage();
   const [hostName, setHostName] = useState("");
   const [game, setGame] = useState<GameSlug>("random-questions");
   const [hideQuestions, setHideQuestions] = useState(false);
@@ -45,6 +23,36 @@ export default function Home() {
   const [inviteLink, setInviteLink] = useState<string | null>(null);
   const [baseUrl, setBaseUrl] = useState("");
   const [copied, setCopied] = useState(false);
+
+  // Game data with translations
+  const games = [
+    {
+      slug: "random-questions" as GameSlug,
+      emoji: "💭",
+      get title() {
+        return t.home.games.randomQuestions.title;
+      },
+      get gist() {
+        return t.home.games.randomQuestions.gist;
+      },
+      get detail() {
+        return t.home.games.randomQuestions.detail;
+      },
+    },
+    {
+      slug: "idea-matching" as GameSlug,
+      emoji: "✨",
+      get title() {
+        return t.home.games.ideaMatching.title;
+      },
+      get gist() {
+        return t.home.games.ideaMatching.gist;
+      },
+      get detail() {
+        return t.home.games.ideaMatching.detail;
+      },
+    },
+  ];
 
   useEffect(() => {
     setBaseUrl(window.location.origin);
@@ -100,19 +108,19 @@ export default function Home() {
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-3">
               <h1 className="text-3xl font-bold text-white sm:text-4xl">
-                Play together, anytime 💕
+                {t.home.hero.title}
               </h1>
               <p className="max-w-2xl text-lg text-white/85">
-                Fun games designed for couples. Start a room, share the link with your partner, and enjoy some quality time together.
+                {t.home.hero.subtitle}
               </p>
             </div>
             <div className="relative mt-4 w-full max-w-xs overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-5 text-white shadow-lg backdrop-blur sm:mt-0">
               <div className="absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full bg-pink-300/30 blur-3xl" />
               <div className="relative space-y-2 text-center">
                 <div className="text-3xl">🎮</div>
-                <h2 className="text-xl font-semibold">Ready to play?</h2>
+                <h2 className="text-xl font-semibold">{t.home.hero.readyTitle}</h2>
                 <p className="text-sm text-white/80">
-                  Pick a game below and create your private room!
+                  {t.home.hero.readySubtitle}
                 </p>
               </div>
             </div>
@@ -122,17 +130,17 @@ export default function Home() {
         <div className="grid gap-6 md:grid-cols-[1.2fr_1fr]">
           <section className="rounded-3xl bg-white/90 p-6 shadow-xl backdrop-blur-lg ring-1 ring-white/30">
             <div className="space-y-1">
-              <h2 className="text-2xl font-bold text-slate-900">Create your room</h2>
-              <p className="text-sm text-slate-600">Enter your name, pick a game, and get your invite link!</p>
+              <h2 className="text-2xl font-bold text-slate-900">{t.home.createRoom.title}</h2>
+              <p className="text-sm text-slate-600">{t.home.createRoom.subtitle}</p>
             </div>
 
             <div className="mt-5 space-y-4">
               <label className="block space-y-2 text-sm font-medium text-slate-800">
-                Your name
+                {t.home.createRoom.nameLabel}
                 <input
                   value={hostName}
                   onChange={(e) => setHostName(e.target.value)}
-                  placeholder="Jordan, Alex..."
+                  placeholder={t.home.createRoom.namePlaceholder}
                   className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-900 shadow-sm outline-none ring-2 ring-transparent transition focus:ring-[#ffafc4]"
                 />
               </label>
@@ -166,7 +174,7 @@ export default function Home() {
                     onChange={(e) => setHideQuestions(e.target.checked)}
                     className="h-5 w-5 rounded-md border-slate-300 text-[#ff7fa6] focus:ring-[#ff7fa6]"
                   />
-                  <span>Keep questions secret until we start answering 🤫</span>
+                  <span>{t.home.createRoom.hideQuestionsLabel}</span>
                 </label>
               )}
 
@@ -176,7 +184,7 @@ export default function Home() {
                 disabled={creating || !hostName.trim()}
                 className="w-full rounded-2xl bg-gradient-to-r from-[#ffafc4] to-[#ff7fa6] px-4 py-3 text-center text-base font-bold text-slate-900 shadow-lg shadow-[#ffafc4]/40 transition hover:scale-[1.02] hover:shadow-xl disabled:scale-100 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {creating ? "Creating your room... ✨" : "Create room 🎮"}
+                {creating ? t.home.createRoom.creatingButton : t.home.createRoom.createButton}
               </button>
 
               {error && (
@@ -189,7 +197,7 @@ export default function Home() {
                 <div className="space-y-3 rounded-2xl border-2 border-[#ffafc4] bg-[#fff5f9] p-4 animate-fade-in">
                   <div className="flex items-center gap-2">
                     <span className="text-xl">🎉</span>
-                    <p className="text-sm font-bold text-slate-800">Room ready! Share with your partner:</p>
+                    <p className="text-sm font-bold text-slate-800">{t.home.createRoom.roomReady}</p>
                   </div>
                   <p className="break-all rounded-xl bg-white px-3 py-2 text-sm text-slate-700 ring-1 ring-[#ffafc4]/30">
                     {inviteLink}
@@ -199,13 +207,13 @@ export default function Home() {
                       onClick={copyLink}
                       className="flex-1 rounded-xl bg-slate-900 px-3 py-2 text-sm font-bold text-white transition hover:scale-[1.02]"
                     >
-                      {copied ? "Copied! ✓" : "Copy link"}
+                      {copied ? t.home.createRoom.copied : t.home.createRoom.copyLink}
                     </button>
                     <Link
                       href={inviteLink}
                       className="flex-1 rounded-xl bg-gradient-to-r from-[#ffafc4] to-[#ff7fa6] px-3 py-2 text-center text-sm font-bold text-slate-900 transition hover:scale-[1.02]"
                     >
-                      Enter room
+                      {t.home.createRoom.enterRoom}
                     </Link>
                   </div>
                 </div>
@@ -216,43 +224,43 @@ export default function Home() {
           <section className="rounded-3xl bg-[#0f172a] p-6 text-white shadow-2xl ring-1 ring-white/10">
             <div className="space-y-2">
               <div className="text-3xl">💌</div>
-              <h2 className="text-2xl font-bold">How it works</h2>
+              <h2 className="text-2xl font-bold">{t.home.howItWorks.title}</h2>
             </div>
 
             <div className="mt-6 space-y-4">
               <div className="flex gap-3 items-start">
                 <span className="text-xl">1️⃣</span>
                 <div>
-                  <p className="font-semibold text-white">Create your room</p>
-                  <p className="text-sm text-white/75">Pick a game and get your link</p>
+                  <p className="font-semibold text-white">{t.home.howItWorks.step1Title}</p>
+                  <p className="text-sm text-white/75">{t.home.howItWorks.step1Desc}</p>
                 </div>
               </div>
               <div className="flex gap-3 items-start">
                 <span className="text-xl">2️⃣</span>
                 <div>
-                  <p className="font-semibold text-white">Share with your partner</p>
-                  <p className="text-sm text-white/75">They tap the link and enter their name</p>
+                  <p className="font-semibold text-white">{t.home.howItWorks.step2Title}</p>
+                  <p className="text-sm text-white/75">{t.home.howItWorks.step2Desc}</p>
                 </div>
               </div>
               <div className="flex gap-3 items-start">
                 <span className="text-xl">3️⃣</span>
                 <div>
-                  <p className="font-semibold text-white">Play together!</p>
-                  <p className="text-sm text-white/75">Have fun and enjoy quality time</p>
+                  <p className="font-semibold text-white">{t.home.howItWorks.step3Title}</p>
+                  <p className="text-sm text-white/75">{t.home.howItWorks.step3Desc}</p>
                 </div>
               </div>
             </div>
 
             <div className="mt-4 rounded-2xl bg-white/5 p-4 text-sm text-white/70 ring-1 ring-white/5">
-              <span className="font-semibold text-white/90">💡 Tip:</span> Rooms stay active while you're playing and close after being idle for an hour.
+              <span className="font-semibold text-white/90">💡 {t.home.howItWorks.tip}</span> {t.home.howItWorks.tipText}
             </div>
           </section>
         </div>
 
         <section className="rounded-3xl bg-white/90 p-6 shadow-xl backdrop-blur-lg ring-1 ring-white/30">
           <div className="space-y-1">
-            <h3 className="text-2xl font-bold text-slate-900">Our games</h3>
-            <p className="text-sm text-slate-600">Pick the vibe that fits your mood!</p>
+            <h3 className="text-2xl font-bold text-slate-900">{t.home.ourGames.title}</h3>
+            <p className="text-sm text-slate-600">{t.home.ourGames.subtitle}</p>
           </div>
 
           <div className="mt-5 grid gap-4 md:grid-cols-2">
@@ -274,6 +282,7 @@ export default function Home() {
           </div>
         </section>
       </main>
+      <Footer />
     </div>
   );
 }

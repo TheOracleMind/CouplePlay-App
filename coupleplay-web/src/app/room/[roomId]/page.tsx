@@ -4,8 +4,11 @@ import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { GameSlug, Player, Question, Room } from "@/lib/types";
 import { getBrowserClient } from "@/lib/supabase/client";
+import { useLanguage } from "@/lib/i18n";
+import { Footer } from "@/components/Footer";
 
 export default function RoomPage() {
+  const { t, interpolate } = useLanguage();
   const params = useParams<{ roomId: string }>();
   const searchParams = useSearchParams();
 
@@ -421,8 +424,8 @@ export default function RoomPage() {
       "idea-matching": "✨",
     };
     const gameLabel: Record<GameSlug, string> = {
-      "random-questions": "Random Questions",
-      "idea-matching": "Idea Matching",
+      "random-questions": t.home.games.randomQuestions.title,
+      "idea-matching": t.home.games.ideaMatching.title,
     };
 
     return (
@@ -430,11 +433,11 @@ export default function RoomPage() {
         <div className="space-y-2">
           <div className="text-3xl">{room?.game && gameEmoji[room.game]}</div>
           <h1 className="text-3xl font-bold text-white">
-            {room?.game ? gameLabel[room.game] : "Let's play!"}
+            {room?.game ? gameLabel[room.game] : gameLabel["random-questions"]}
           </h1>
         </div>
         <p className="mt-3 text-base text-white/85">
-          You're in! Just follow along and have fun together.
+          {t.room.header.subtitle}
         </p>
       </header>
     );
@@ -450,14 +453,14 @@ export default function RoomPage() {
         {!currentPlayer && (
           <div className="space-y-3 rounded-2xl bg-black/50 p-4 ring-1 ring-white/10">
             <div className="text-2xl">👋</div>
-            <p className="text-lg font-bold">Welcome!</p>
+            <p className="text-lg font-bold">{t.room.connection.welcomeTitle}</p>
             <p className="text-sm text-white/75">
-              Enter your name to join the fun!
+              {t.room.connection.welcomeSubtitle}
             </p>
             <input
               value={nameInput}
               onChange={(e) => setNameInput(e.target.value)}
-              placeholder="Your name"
+              placeholder={t.room.connection.namePlaceholder}
               className="w-full rounded-xl border border-white/10 bg-white/10 px-4 py-3 text-base text-white outline-none ring-2 ring-transparent focus:ring-[#ffafc4]"
             />
             <button
@@ -465,7 +468,7 @@ export default function RoomPage() {
               onClick={handleJoin}
               className="w-full rounded-xl bg-gradient-to-r from-[#ffafc4] to-[#ff7fa6] px-4 py-3 text-base font-bold text-slate-900 shadow-lg shadow-[#ffafc4]/40 transition hover:scale-[1.02] disabled:opacity-60"
             >
-              {saving ? "Joining... ✨" : "Join room 🎮"}
+              {saving ? t.room.connection.joiningButton : t.room.connection.joinButton}
             </button>
             {error && <p className="rounded-xl bg-red-100/10 px-3 py-2 text-sm text-red-200">{error}</p>}
           </div>
@@ -475,7 +478,7 @@ export default function RoomPage() {
             <div className="flex items-center gap-3">
               <div className="text-2xl">👤</div>
               <div>
-                <p className="text-sm text-white/70">You</p>
+                <p className="text-sm text-white/70">{t.room.connection.you}</p>
                 <p className="text-xl font-bold text-white">{currentPlayer.name}</p>
               </div>
             </div>
@@ -483,14 +486,14 @@ export default function RoomPage() {
               <div className="flex items-center gap-3">
                 <div className="text-2xl">❤️</div>
                 <div>
-                  <p className="text-sm text-white/70">Your partner</p>
+                  <p className="text-sm text-white/70">{t.room.connection.yourPartner}</p>
                   <p className="text-xl font-bold text-white">{partner.name}</p>
                 </div>
               </div>
             ) : (
               <div className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-2">
                 <div className="h-2 w-2 animate-pulse rounded-full bg-[#ffafc4]" />
-                <p className="text-sm text-white/80">Waiting for your partner...</p>
+                <p className="text-sm text-white/80">{t.room.connection.waitingForPartner}</p>
               </div>
             )}
           </div>
@@ -513,11 +516,11 @@ export default function RoomPage() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <div className="text-2xl mb-2">✍️</div>
-            <h2 className="text-2xl font-bold">Add your questions</h2>
+            <h2 className="text-2xl font-bold">{t.room.collect.title}</h2>
             <p className="text-sm text-slate-600">
               {hide
-                ? "Your questions are kept secret for now. They'll be revealed when you start answering!"
-                : "Add as many questions as you'd like. You'll both see them as they're added."}
+                ? t.room.collect.subtitleHidden
+                : t.room.collect.subtitleVisible}
             </p>
           </div>
         </div>
@@ -528,7 +531,7 @@ export default function RoomPage() {
           }`}>
             <span className="text-base">👤</span>
             <span className="text-sm font-semibold">
-              {currentPlayer?.name || "You"}: {currentPlayer?.stage_one_done ? "Ready! ✓" : "Adding questions..."}
+              {currentPlayer?.name || t.room.connection.you}: {currentPlayer?.stage_one_done ? t.room.collect.ready : t.room.collect.addingQuestions}
             </span>
           </div>
           {partner && (
@@ -537,7 +540,7 @@ export default function RoomPage() {
             }`}>
               <span className="text-base">❤️</span>
               <span className="text-sm font-semibold">
-                {partner.name}: {partner.stage_one_done ? "Ready! ✓" : "Adding questions..."}
+                {partner.name}: {partner.stage_one_done ? t.room.collect.ready : t.room.collect.addingQuestions}
               </span>
             </div>
           )}
@@ -555,8 +558,8 @@ export default function RoomPage() {
               }`}
             >
               {currentPlayer.stage_one_done
-                ? (bothDone ? "Both ready! Starting soon... ✨" : `Ready! Waiting for ${partner?.name || "partner"}...`)
-                : "I'm done adding questions ✓"}
+                ? (bothDone ? t.room.collect.bothReadyWaiting : interpolate(t.room.collect.readyWaitingFor, { partner: partner?.name || "partner" }))
+                : t.room.collect.doneButton}
             </button>
           </div>
         )}
@@ -566,7 +569,7 @@ export default function RoomPage() {
             <input
               value={questionInput}
               onChange={(e) => setQuestionInput(e.target.value)}
-              placeholder="What do you want to ask? 💭"
+              placeholder={t.room.collect.questionPlaceholder}
               className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-base outline-none ring-2 ring-transparent focus:ring-[#ffafc4]"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && questionInput.trim() && currentPlayer) {
@@ -579,24 +582,28 @@ export default function RoomPage() {
               onClick={() => currentPlayer && addQuestion(currentPlayer)}
               className="rounded-xl bg-slate-900 px-5 py-3 text-base font-bold text-white transition hover:scale-[1.02] disabled:opacity-50"
             >
-              Add
+              {t.room.collect.addButton}
             </button>
           </div>
 
           <div className="mt-4 space-y-2 rounded-2xl border-2 border-slate-200 bg-white p-4 min-h-[120px]">
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm font-bold text-slate-700">
-                {visibleQuestions.length === 0 ? "Your questions will appear here" : `${visibleQuestions.length} question${visibleQuestions.length === 1 ? "" : "s"}`}
+                {visibleQuestions.length === 0
+                  ? t.room.collect.questionsWillAppear
+                  : visibleQuestions.length === 1
+                    ? interpolate(t.room.collect.questionCount, { count: visibleQuestions.length })
+                    : interpolate(t.room.collect.questionCountPlural, { count: visibleQuestions.length })}
               </p>
             </div>
             {visibleQuestions.length === 0 && (
-              <p className="text-sm text-slate-400 text-center py-4">Start adding questions above!</p>
+              <p className="text-sm text-slate-400 text-center py-4">{t.room.collect.startAdding}</p>
             )}
             {visibleQuestions.map((q) => (
               <div key={q.id} className="rounded-xl bg-slate-50 px-4 py-3 border border-slate-100">
                 <p className="text-base font-semibold text-slate-800">{q.text}</p>
                 <p className="text-xs text-slate-500 mt-1">
-                  Added by {playerName(q.author_id)}
+                  {interpolate(t.room.collect.addedBy, { name: playerName(q.author_id) })}
                 </p>
               </div>
             ))}
@@ -626,12 +633,12 @@ export default function RoomPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <div className="text-2xl mb-2">💬</div>
-              <h2 className="text-2xl font-bold">Time to answer!</h2>
-              <p className="text-sm text-slate-600">Take turns answering. Your partner can watch you type live!</p>
+              <h2 className="text-2xl font-bold">{t.room.answer.title}</h2>
+              <p className="text-sm text-slate-600">{t.room.answer.subtitle}</p>
             </div>
             <div className="rounded-full bg-[#fff5f9] border-2 border-[#ffafc4] px-4 py-2">
               <p className="text-sm font-bold text-slate-900">
-                {isMyTurn ? "Your turn! 🎯" : `${currentAnsweringPlayer?.name}'s turn`}
+                {isMyTurn ? t.room.answer.yourTurn : interpolate(t.room.answer.partnerTurn, { name: currentAnsweringPlayer?.name || "" })}
               </p>
             </div>
           </div>
@@ -639,18 +646,18 @@ export default function RoomPage() {
           {current ? (
             <div className="mt-4 space-y-4 rounded-2xl border-2 border-slate-200 bg-white p-5">
               <div className="rounded-xl bg-[#fff5f9] p-4">
-                <p className="text-xs font-semibold text-[#ff7fa6] uppercase mb-1">Question</p>
+                <p className="text-xs font-semibold text-[#ff7fa6] uppercase mb-1">{t.room.answer.questionLabel}</p>
                 <p className="text-lg font-bold text-slate-900">{current.text}</p>
               </div>
 
               {isMyTurn ? (
                 <div className="space-y-3">
                   <div>
-                    <p className="text-sm font-semibold text-slate-700 mb-2">Your answer:</p>
+                    <p className="text-sm font-semibold text-slate-700 mb-2">{t.room.answer.yourAnswerLabel}</p>
                     <textarea
                       value={draftAnswers[current.id] ?? current.answer_text ?? ""}
                       onChange={(e) => saveAnswer(current, e.target.value)}
-                      placeholder="Type your answer here... your partner is watching! 👀"
+                      placeholder={t.room.answer.answerPlaceholder}
                       className="w-full rounded-xl border-2 border-slate-200 bg-white px-4 py-3 text-base outline-none ring-2 ring-transparent focus:ring-[#ffafc4] focus:border-[#ffafc4]"
                       rows={5}
                       disabled={answerSubmitted}
@@ -665,10 +672,10 @@ export default function RoomPage() {
                     }`}
                     disabled={answerSubmitted || !(draftAnswers[current.id] ?? current.answer_text)?.trim()}
                   >
-                    {answerSubmitted ? "Answer submitted! ✓" : "Submit answer"}
+                    {answerSubmitted ? t.room.answer.answerSubmitted : t.room.answer.submitButton}
                   </button>
                   {answerSubmitted && !partnerConfirmed && (
-                    <p className="text-sm text-slate-600 text-center">Waiting for {currentAnsweringPlayer?.name === currentPlayer.name ? "your partner" : currentAnsweringPlayer?.name} to read your answer...</p>
+                    <p className="text-sm text-slate-600 text-center">{interpolate(t.room.answer.waitingForPartner, { name: currentAnsweringPlayer?.name === currentPlayer?.name ? t.room.connection.yourPartner : currentAnsweringPlayer?.name || "" })}</p>
                   )}
                 </div>
               ) : (
@@ -676,10 +683,10 @@ export default function RoomPage() {
                   <div className="rounded-xl bg-slate-50 p-4 border-2 border-slate-200">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-base">✍️</span>
-                      <p className="text-sm font-semibold text-slate-700">{currentAnsweringPlayer?.name} is typing...</p>
+                      <p className="text-sm font-semibold text-slate-700">{interpolate(t.room.answer.partnerTyping, { name: currentAnsweringPlayer?.name || "" })}</p>
                     </div>
                     <p className="min-h-[100px] whitespace-pre-wrap text-base text-slate-800">
-                      {draftAnswers[current.id] ?? current.answer_text ?? "Waiting for their answer..."}
+                      {draftAnswers[current.id] ?? current.answer_text ?? t.room.answer.waitingForAnswer}
                     </p>
                   </div>
                   <button
@@ -691,16 +698,16 @@ export default function RoomPage() {
                     }`}
                     disabled={!((draftAnswers[current.id] ?? current.answer_text)?.trim()) || partnerConfirmed}
                   >
-                    {partnerConfirmed ? "Confirmed! ✓" : "I read it, next question!"}
+                    {partnerConfirmed ? t.room.answer.confirmed : t.room.answer.confirmButton}
                   </button>
                   {partnerConfirmed && !answerSubmitted && (
-                    <p className="text-sm text-slate-600 text-center">Waiting for {currentAnsweringPlayer?.name} to finish...</p>
+                    <p className="text-sm text-slate-600 text-center">{interpolate(t.room.answer.waitingForFinish, { name: currentAnsweringPlayer?.name || "" })}</p>
                   )}
                 </div>
               )}
             </div>
           ) : (
-            <p className="text-sm text-slate-600 text-center py-4">Getting ready...</p>
+            <p className="text-sm text-slate-600 text-center py-4">{t.room.answer.gettingReady}</p>
           )}
         </div>
 
@@ -708,9 +715,9 @@ export default function RoomPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-lg">📊</span>
-              <p className="text-sm font-semibold text-white">Progress</p>
+              <p className="text-sm font-semibold text-white">{t.room.answer.progressLabel}</p>
             </div>
-            <p className="text-base font-bold text-white">{completedCount}/{totalCount} answered</p>
+            <p className="text-base font-bold text-white">{interpolate(t.room.answer.progressCount, { completed: completedCount, total: totalCount })}</p>
           </div>
           <div className="mt-2 h-2 rounded-full bg-white/10 overflow-hidden">
             <div
@@ -729,8 +736,8 @@ export default function RoomPage() {
       <section className="rounded-3xl bg-white/90 p-5 text-slate-900 shadow-xl ring-1 ring-white/30">
         <div className="space-y-2">
           <div className="text-3xl">🎉</div>
-          <h2 className="text-2xl font-bold">You did it!</h2>
-          <p className="text-sm text-slate-600">Here's everything you both shared. Take your time reading through!</p>
+          <h2 className="text-2xl font-bold">{t.room.review.title}</h2>
+          <p className="text-sm text-slate-600">{t.room.review.subtitle}</p>
         </div>
         <div className="mt-5 space-y-4">
           {ordered.map((q, index) => (
@@ -744,9 +751,9 @@ export default function RoomPage() {
                   <div className="rounded-xl bg-slate-50 p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-base">{playerName(q.answering_player_id) === players[0]?.name ? "👤" : "❤️"}</span>
-                      <p className="text-xs font-semibold text-slate-600">{playerName(q.answering_player_id)} answered:</p>
+                      <p className="text-xs font-semibold text-slate-600">{interpolate(t.room.review.answeredBy, { name: playerName(q.answering_player_id) })}</p>
                     </div>
-                    <p className="whitespace-pre-wrap text-base text-slate-800">{q.answer_text || "No answer provided"}</p>
+                    <p className="whitespace-pre-wrap text-base text-slate-800">{q.answer_text || t.room.review.noAnswer}</p>
                   </div>
                 </div>
               </div>
@@ -754,8 +761,8 @@ export default function RoomPage() {
           ))}
         </div>
         <div className="mt-5 rounded-2xl bg-[#fff5f9] border-2 border-[#ffafc4] p-4 text-center">
-          <p className="text-base font-semibold text-slate-900">🎮 Want to play again?</p>
-          <p className="text-sm text-slate-600 mt-1">Head back to the home page to start a new room!</p>
+          <p className="text-base font-semibold text-slate-900">{t.room.review.playAgainTitle}</p>
+          <p className="text-sm text-slate-600 mt-1">{t.room.review.playAgainSubtitle}</p>
         </div>
       </section>
     );
@@ -789,6 +796,7 @@ export default function RoomPage() {
         {renderConnection()}
         {currentPlayerId && renderStage()}
       </div>
+      <Footer />
     </div>
   );
 }

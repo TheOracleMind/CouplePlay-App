@@ -202,11 +202,12 @@ export default function RoomPage() {
             if (q.answering_player_id !== currentPlayerId) {
               // It's the other player's turn - always update to show live typing
               next[q.id] = q.answer_text;
-            } else if (!next[q.id]) {
+            } else if (prev[q.id] === undefined || prev[q.id] === null) {
               // It's my turn but I haven't started typing yet - initialize from database
+              // Only initialize if there's NO previous draft (not even empty string)
               next[q.id] = q.answer_text;
             }
-            // If it's my turn AND I already have a draft (next[q.id] exists),
+            // If it's my turn AND I already have a draft (prev[q.id] is defined),
             // DO NOT overwrite with database value - preserve my active typing
           }
         });
@@ -248,7 +249,7 @@ export default function RoomPage() {
             );
             // ONLY update draft answers for questions being answered by OTHER players (reader view)
             // NEVER update draft answers for questions the current player is answering (writer view)
-            if (updatedQuestion.answering_player_id !== currentPlayerId && updatedQuestion.answer_text) {
+            if (updatedQuestion.answering_player_id !== currentPlayerId) {
               setDraftAnswers((prev) => ({
                 ...prev,
                 [updatedQuestion.id]: updatedQuestion.answer_text ?? "",

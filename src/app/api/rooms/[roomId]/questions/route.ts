@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 export async function POST(
   request: Request,
-  { params }: { params: { roomId: string } },
+  context: { params: Promise<{ roomId: string }> },
 ) {
   const supabase = supabaseServer;
   if (!supabase) {
@@ -14,6 +14,7 @@ export async function POST(
   }
 
   const body = await request.json();
+  const { roomId } = await context.params;
   const text = body?.text?.trim();
   const authorId = body?.authorId;
 
@@ -25,7 +26,7 @@ export async function POST(
     .from("questions")
     .insert({
       id: crypto.randomUUID(),
-      room_id: params.roomId,
+      room_id: roomId,
       author_id: authorId,
       text,
       answering_player_id: null,

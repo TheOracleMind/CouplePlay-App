@@ -76,7 +76,7 @@ export async function POST(
         const assignee = playersRoundRobin[idx % playersRoundRobin.length];
         if (assignee) {
           questionUpdates.push(
-            supabase.from("questions").update({ answering_player_id: assignee.id }).eq("id", q.id),
+            Promise.resolve(supabase.from("questions").update({ answering_player_id: assignee.id }).eq("id", q.id)),
           );
           q.answering_player_id = assignee.id;
         }

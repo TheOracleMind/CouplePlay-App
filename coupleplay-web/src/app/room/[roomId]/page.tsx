@@ -8,7 +8,7 @@ import { useLanguage } from "@/lib/i18n";
 import { Footer } from "@/components/Footer";
 
 export default function RoomPage() {
-  const { t, interpolate } = useLanguage();
+  const { t, interpolate, language } = useLanguage();
   const params = useParams<{ roomId: string }>();
   const searchParams = useSearchParams();
 
@@ -29,6 +29,8 @@ export default function RoomPage() {
   const [lastSentAnswers, setLastSentAnswers] = useState<Record<string, string>>({});
   const [viewKey, setViewKey] = useState(0);
   const [turnKey, setTurnKey] = useState(0);
+  const [suggestedQuestion, setSuggestedQuestion] = useState<string>("");
+  const [loadingSuggestion, setLoadingSuggestion] = useState(false);
 
   const stageStartedRef = useRef(false);
 
@@ -300,6 +302,47 @@ export default function RoomPage() {
     else await refreshData({ skipLoading: true });
   }
 
+  async function fetchSuggestedQuestion() {
+    setLoadingSuggestion(true);
+    try {
+      const response = await fetch(`/api/suggested-question?lang=${language}`);
+      const data = await response.json();
+      if (response.ok && data.question) {
+        setSuggestedQuestion(data.question);
+      } else {
+        console.error("Failed to fetch suggested question");
+      }
+    } catch (error) {
+      console.error("Error fetching suggested question:", error);
+    } finally {
+      setLoadingSuggestion(false);
+    }
+  }
+
+  async function useSuggestedQuestion(currentPlayer: Player) {
+    if (!supabase || !suggestedQuestion.trim()) return;
+    const text = suggestedQuestion.trim();
+    setSuggestedQuestion("");
+    const { error: insertError } = await supabase.from("questions").insert({
+      room_id: roomId,
+      author_id: currentPlayer.id,
+      text,
+    });
+    if (insertError) setError(insertError.message);
+    else {
+      await refreshData({ skipLoading: true });
+      // Fetch a new suggestion after using one
+      await fetchSuggestedQuestion();
+    }
+  }
+
+  // Fetch initial suggested question when room stage is collect
+  useEffect(() => {
+    if (room?.stage === "collect" && !suggestedQuestion && !loadingSuggestion) {
+      void fetchSuggestedQuestion();
+    }
+  }, [room?.stage]);
+
   async function toggleStageOne(currentPlayer?: Player) {
     if (!currentPlayer) return;
     try {
@@ -512,12 +555,12 @@ export default function RoomPage() {
     const bothDone = players.length === 2 && players.every((p) => p.stage_one_done);
 
     return (
-      <section className="rounded-3xl bg-white/90 p-5 text-slate-900 shadow-xl ring-1 ring-white/30">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      <section className="rounded-3xl bg-white/90 p-6 text-slate-900 shadow-xl ring-1 ring-white/30 sm:p-8">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <div>
             <div className="text-2xl mb-2">✍️</div>
             <h2 className="text-2xl font-bold">{t.room.collect.title}</h2>
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-slate-600 mt-1">
               {hide
                 ? t.room.collect.subtitleHidden
                 : t.room.collect.subtitleVisible}
@@ -525,7 +568,7 @@ export default function RoomPage() {
           </div>
         </div>
 
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-3 mb-5">
           <div className={`flex items-center gap-2 rounded-full px-4 py-2 ${
             currentPlayer?.stage_one_done ? "bg-green-50 ring-2 ring-green-200" : "bg-slate-100"
           }`}>
@@ -547,7 +590,7 @@ export default function RoomPage() {
         </div>
 
         {currentPlayer && (
-          <div className="mt-3">
+          <div className="mb-6">
             <button
               type="button"
               onClick={() => toggleStageOne(currentPlayer)}
@@ -564,7 +607,7 @@ export default function RoomPage() {
           </div>
         )}
 
-        <div className="mt-5 space-y-3">
+        <div className="space-y-4">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
             <input
               value={questionInput}
@@ -586,7 +629,34 @@ export default function RoomPage() {
             </button>
           </div>
 
-          <div className="mt-4 space-y-2 rounded-2xl border-2 border-slate-200 bg-white p-4 min-h-[120px]">
+          {/* Suggested Question */}
+          {suggestedQuestion && currentPlayer && (
+            <div className="rounded-2xl border-2 border-purple-200 bg-purple-50 p-5 animate-fade-in">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-lg">💡</span>
+                <p className="text-sm font-bold text-purple-900">{t.room.collect.suggestionTitle}</p>
+              </div>
+              <p className="text-base text-slate-800 mb-4 italic leading-relaxed">"{suggestedQuestion}"</p>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <button
+                  onClick={() => useSuggestedQuestion(currentPlayer)}
+                  disabled={loadingSuggestion}
+                  className="flex-1 rounded-xl bg-purple-600 px-4 py-2.5 text-sm font-bold text-white transition hover:scale-[1.02] disabled:opacity-50"
+                >
+                  {t.room.collect.useSuggestion}
+                </button>
+                <button
+                  onClick={fetchSuggestedQuestion}
+                  disabled={loadingSuggestion}
+                  className="rounded-xl bg-slate-700 px-4 py-2.5 text-sm font-bold text-white transition hover:scale-[1.02] disabled:opacity-50 sm:w-auto"
+                >
+                  {loadingSuggestion ? t.room.collect.loadingSuggestion : t.room.collect.nextSuggestion}
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-3 rounded-2xl border-2 border-slate-200 bg-white p-5 min-h-[140px]">
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm font-bold text-slate-700">
                 {visibleQuestions.length === 0
@@ -597,12 +667,12 @@ export default function RoomPage() {
               </p>
             </div>
             {visibleQuestions.length === 0 && (
-              <p className="text-sm text-slate-400 text-center py-4">{t.room.collect.startAdding}</p>
+              <p className="text-sm text-slate-400 text-center py-6">{t.room.collect.startAdding}</p>
             )}
             {visibleQuestions.map((q) => (
-              <div key={q.id} className="rounded-xl bg-slate-50 px-4 py-3 border border-slate-100">
-                <p className="text-base font-semibold text-slate-800">{q.text}</p>
-                <p className="text-xs text-slate-500 mt-1">
+              <div key={q.id} className="rounded-xl bg-slate-50 px-4 py-3.5 border border-slate-100 hover:border-slate-200 transition-colors">
+                <p className="text-base font-semibold text-slate-800 leading-relaxed">{q.text}</p>
+                <p className="text-xs text-slate-500 mt-2">
                   {interpolate(t.room.collect.addedBy, { name: playerName(q.author_id) })}
                 </p>
               </div>

@@ -89,6 +89,10 @@ export const translations = {
         questionCountPlural: "{count} questions",
         startAdding: "Start adding questions above!",
         addedBy: "Added by {name}",
+        suggestionTitle: "Need inspiration? 💡",
+        useSuggestion: "Use this question",
+        nextSuggestion: "Next suggestion",
+        loadingSuggestion: "Loading...",
       },
       answer: {
         title: "Time to answer!",
@@ -215,6 +219,10 @@ export const translations = {
         questionCountPlural: "{count} perguntas",
         startAdding: "Comece adicionando perguntas acima!",
         addedBy: "Adicionada por {name}",
+        suggestionTitle: "Precisa de inspiração? 💡",
+        useSuggestion: "Usar esta pergunta",
+        nextSuggestion: "Próxima sugestão",
+        loadingSuggestion: "Carregando...",
       },
       answer: {
         title: "Hora de responder!",

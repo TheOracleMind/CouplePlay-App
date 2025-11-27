@@ -389,20 +389,25 @@ export default function RoomPage() {
   }
 
   function renderHeader() {
+    const gameEmoji: Record<GameSlug, string> = {
+      "random-questions": "💭",
+      "idea-matching": "✨",
+    };
     const gameLabel: Record<GameSlug, string> = {
       "random-questions": "Random Questions",
-      "idea-matching": "Idea Matching (not active here)",
+      "idea-matching": "Idea Matching",
     };
 
     return (
       <header className="rounded-3xl bg-gradient-to-br from-[#1b2437] via-[#141c2f] to-[#0f172a] p-6 shadow-[0_20px_70px_rgba(0,0,0,0.4)]">
         <div className="space-y-2">
-          <p className="text-sm uppercase tracking-wide text-white/70">Private room</p>
-          <h1 className="text-3xl font-semibold text-white">CouplePlay Session</h1>
-          {room?.game && <p className="text-sm text-white/75">{gameLabel[room.game]}</p>}
+          <div className="text-3xl">{room?.game && gameEmoji[room.game]}</div>
+          <h1 className="text-3xl font-bold text-white">
+            {room?.game ? gameLabel[room.game] : "Let's play!"}
+          </h1>
         </div>
-        <p className="mt-3 text-sm text-white/75">
-          Share the link, add questions together, then take turns answering. We will guide you through each step.
+        <p className="mt-3 text-base text-white/85">
+          You're in! Just follow along and have fun together.
         </p>
       </header>
     );
@@ -411,49 +416,58 @@ export default function RoomPage() {
   function renderConnection() {
     const currentPlayer = players.find((p) => p.id === currentPlayerId);
     const guestPresent = players.some((p) => p.role === "guest");
+    const partner = players.find((p) => p.id !== currentPlayerId);
 
     return (
-      <section className="grid gap-4 rounded-3xl bg-white/5 p-5 shadow-2xl ring-1 ring-white/10 md:grid-cols-[2fr_1fr]">
+      <section className="rounded-3xl bg-white/5 p-5 shadow-2xl ring-1 ring-white/10">
         {!currentPlayer && (
           <div className="space-y-3 rounded-2xl bg-black/50 p-4 ring-1 ring-white/10">
-            <p className="text-base font-semibold">Join this room</p>
-            <p className="text-sm text-white/70">
-              Enter your name to start. The rest of the game will unlock after you join.
+            <div className="text-2xl">👋</div>
+            <p className="text-lg font-bold">Welcome!</p>
+            <p className="text-sm text-white/75">
+              Enter your name to join the fun!
             </p>
             <input
               value={nameInput}
               onChange={(e) => setNameInput(e.target.value)}
               placeholder="Your name"
-              className="w-full rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-sm text-white outline-none ring-2 ring-transparent focus:ring-[#ffafc4]"
+              className="w-full rounded-xl border border-white/10 bg-white/10 px-4 py-3 text-base text-white outline-none ring-2 ring-transparent focus:ring-[#ffafc4]"
             />
             <button
               disabled={!nameInput.trim() || saving}
               onClick={handleJoin}
-              className="w-full rounded-xl bg-gradient-to-r from-[#ffafc4] to-[#ff7fa6] px-3 py-2 text-sm font-semibold text-slate-900 shadow-lg shadow-[#ffafc4]/40 transition hover:scale-[1.01] disabled:opacity-60"
+              className="w-full rounded-xl bg-gradient-to-r from-[#ffafc4] to-[#ff7fa6] px-4 py-3 text-base font-bold text-slate-900 shadow-lg shadow-[#ffafc4]/40 transition hover:scale-[1.02] disabled:opacity-60"
             >
-              {saving ? "Joining..." : "Join as player 2"}
+              {saving ? "Joining... ✨" : "Join room 🎮"}
             </button>
             {error && <p className="rounded-xl bg-red-100/10 px-3 py-2 text-sm text-red-200">{error}</p>}
           </div>
         )}
         {currentPlayer && (
-          <div className="space-y-2 rounded-2xl bg-black/30 p-4 ring-1 ring-white/10">
-            <p className="text-base font-semibold">You</p>
-            <p className="text-xl font-semibold text-white">{currentPlayer.name}</p>
-            <p className="text-xs text-white/70 capitalize">{currentPlayer.role}</p>
-            {guestPresent ? (
-              <p className="text-xs text-green-200">Your partner is here. Continue below.</p>
+          <div className="flex flex-wrap gap-3 items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="text-2xl">👤</div>
+              <div>
+                <p className="text-sm text-white/70">You</p>
+                <p className="text-xl font-bold text-white">{currentPlayer.name}</p>
+              </div>
+            </div>
+            {guestPresent && partner ? (
+              <div className="flex items-center gap-3">
+                <div className="text-2xl">❤️</div>
+                <div>
+                  <p className="text-sm text-white/70">Your partner</p>
+                  <p className="text-xl font-bold text-white">{partner.name}</p>
+                </div>
+              </div>
             ) : (
-              <p className="text-xs text-white/70">Waiting for your partner to join.</p>
+              <div className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-2">
+                <div className="h-2 w-2 animate-pulse rounded-full bg-[#ffafc4]" />
+                <p className="text-sm text-white/80">Waiting for your partner...</p>
+              </div>
             )}
           </div>
         )}
-        <div className="space-y-2 rounded-2xl bg-black/20 p-4 ring-1 ring-white/5">
-          <p className="text-sm font-semibold text-white/80">Flow</p>
-          <p className="text-xs text-white/70">Stage 1: add questions together.</p>
-          <p className="text-xs text-white/70">Stage 2: take turns answering.</p>
-          <p className="text-xs text-white/70">Stage 3: enjoy your recap.</p>
-        </div>
       </section>
     );
   }
@@ -464,40 +478,41 @@ export default function RoomPage() {
     const visibleQuestions = showAll
       ? questions
       : questions.filter((q) => q.author_id === currentPlayer?.id);
-    const host = players.find((p) => p.role === "host");
-    const guest = players.find((p) => p.role === "guest");
+    const partner = players.find((p) => p.id !== currentPlayer?.id);
+    const bothDone = players.length === 2 && players.every((p) => p.stage_one_done);
 
     return (
       <section className="rounded-3xl bg-white/90 p-5 text-slate-900 shadow-xl ring-1 ring-white/30">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-sm font-semibold text-[#ff7fa6]">Stage 1 - Add questions</p>
-            <h2 className="text-2xl font-semibold">Build your list together</h2>
+            <div className="text-2xl mb-2">✍️</div>
+            <h2 className="text-2xl font-bold">Add your questions</h2>
             <p className="text-sm text-slate-600">
               {hide
-                ? "Questions are private while you type. They reveal in the answer stage."
-                : "Both sides see the list live as you add."}
+                ? "Your questions are kept secret for now. They'll be revealed when you start answering!"
+                : "Add as many questions as you'd like. You'll both see them as they're added."}
             </p>
           </div>
-          <StageDoneToggle
-            label="I'm done adding"
-            checked={Boolean(currentPlayer?.stage_one_done)}
-            onToggle={() => toggleStageOne(currentPlayer)}
-            disabled={!currentPlayer}
-          />
         </div>
 
-        <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold text-slate-700">
-          <span className="rounded-full bg-slate-100 px-3 py-2">
-            Host: {host ? (host.stage_one_done ? "Done" : "Working") : "Not joined"}
-          </span>
-          <span className="rounded-full bg-slate-100 px-3 py-2">
-            Guest: {guest ? (guest.stage_one_done ? "Done" : "Working") : "Not joined"}
-          </span>
-          {!currentPlayer && (
-            <span className="rounded-full bg-red-50 px-3 py-2 text-red-600">
-              Join above to mark yourself done
+        <div className="mt-4 flex flex-wrap gap-2">
+          <div className={`flex items-center gap-2 rounded-full px-4 py-2 ${
+            currentPlayer?.stage_one_done ? "bg-green-50 ring-2 ring-green-200" : "bg-slate-100"
+          }`}>
+            <span className="text-base">👤</span>
+            <span className="text-sm font-semibold">
+              {currentPlayer?.name || "You"}: {currentPlayer?.stage_one_done ? "Ready! ✓" : "Adding questions..."}
             </span>
+          </div>
+          {partner && (
+            <div className={`flex items-center gap-2 rounded-full px-4 py-2 ${
+              partner.stage_one_done ? "bg-green-50 ring-2 ring-green-200" : "bg-slate-100"
+            }`}>
+              <span className="text-base">❤️</span>
+              <span className="text-sm font-semibold">
+                {partner.name}: {partner.stage_one_done ? "Ready! ✓" : "Adding questions..."}
+              </span>
+            </div>
           )}
         </div>
 
@@ -506,13 +521,15 @@ export default function RoomPage() {
             <button
               type="button"
               onClick={() => toggleStageOne(currentPlayer)}
-              className={`w-full rounded-2xl px-4 py-3 text-center text-sm font-semibold shadow-md transition ${
+              className={`w-full rounded-2xl px-4 py-3 text-center text-base font-bold shadow-md transition ${
                 currentPlayer.stage_one_done
                   ? "bg-green-600 text-white shadow-green-500/40 hover:opacity-90"
-                  : "bg-gradient-to-r from-[#ffafc4] to-[#ff7fa6] text-slate-900 shadow-[#ffafc4]/50 hover:scale-[1.01]"
+                  : "bg-gradient-to-r from-[#ffafc4] to-[#ff7fa6] text-slate-900 shadow-[#ffafc4]/50 hover:scale-[1.02]"
               }`}
             >
-              {currentPlayer.stage_one_done ? "Marked done — waiting for partner" : "Mark me as done adding"}
+              {currentPlayer.stage_one_done
+                ? (bothDone ? "Both ready! Starting soon... ✨" : `Ready! Waiting for ${partner?.name || "partner"}...`)
+                : "I'm done adding questions ✓"}
             </button>
           </div>
         )}
@@ -522,33 +539,38 @@ export default function RoomPage() {
             <input
               value={questionInput}
               onChange={(e) => setQuestionInput(e.target.value)}
-              placeholder="Type a question"
-              className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm outline-none ring-2 ring-transparent focus:ring-[#ffafc4]"
+              placeholder="What do you want to ask? 💭"
+              className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-base outline-none ring-2 ring-transparent focus:ring-[#ffafc4]"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && questionInput.trim() && currentPlayer) {
+                  addQuestion(currentPlayer);
+                }
+              }}
             />
             <button
               disabled={!questionInput.trim() || !currentPlayer}
               onClick={() => currentPlayer && addQuestion(currentPlayer)}
-              className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+              className="rounded-xl bg-slate-900 px-5 py-3 text-base font-bold text-white transition hover:scale-[1.02] disabled:opacity-50"
             >
               Add
             </button>
           </div>
-          <p className="text-xs text-slate-500">
-            {hide
-              ? "Only you see your questions for now. They will be shuffled for answering."
-              : "Both partners see the full list live."}
-          </p>
 
-          <div className="mt-2 space-y-2 rounded-2xl border border-slate-200 bg-white p-4">
-            {visibleQuestions.length === 0 && <p className="text-sm text-slate-500">No questions yet.</p>}
+          <div className="mt-4 space-y-2 rounded-2xl border-2 border-slate-200 bg-white p-4 min-h-[120px]">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-bold text-slate-700">
+                {visibleQuestions.length === 0 ? "Your questions will appear here" : `${visibleQuestions.length} question${visibleQuestions.length === 1 ? "" : "s"}`}
+              </p>
+            </div>
+            {visibleQuestions.length === 0 && (
+              <p className="text-sm text-slate-400 text-center py-4">Start adding questions above!</p>
+            )}
             {visibleQuestions.map((q) => (
-              <div key={q.id} className="flex items-start justify-between gap-2 rounded-xl bg-slate-50 px-3 py-2">
-                <div>
-                  <p className="text-sm font-semibold text-slate-800">{q.text}</p>
-                  <p className="text-xs text-slate-500">
-                    {playerName(q.author_id)} - {new Date(q.created_at).toLocaleTimeString()}
-                  </p>
-                </div>
+              <div key={q.id} className="rounded-xl bg-slate-50 px-4 py-3 border border-slate-100">
+                <p className="text-base font-semibold text-slate-800">{q.text}</p>
+                <p className="text-xs text-slate-500 mt-1">
+                  Added by {playerName(q.author_id)}
+                </p>
               </div>
             ))}
           </div>
@@ -564,89 +586,111 @@ export default function RoomPage() {
       sorted.find((q) => !isDone(q)) ??
       sorted[0];
     const currentAnsweringPlayer = current ? players.find((p) => p.id === current.answering_player_id) : undefined;
-    const isWriter = currentPlayer?.id === current?.answering_player_id;
-    const writerDone = Boolean(current?.writer_done);
-    const readerDone = Boolean(current?.reader_done);
-    const bothDone = writerDone && readerDone;
+    const isMyTurn = currentPlayer?.id === current?.answering_player_id;
+    const answerSubmitted = Boolean(current?.writer_done);
+    const partnerConfirmed = Boolean(current?.reader_done);
+    const bothDone = answerSubmitted && partnerConfirmed;
+    const completedCount = sorted.filter(isDone).length;
+    const totalCount = sorted.length;
 
     return (
       <section key={turnKey} className="space-y-4 fade-in">
         <div className="rounded-3xl bg-white/90 p-5 text-slate-900 shadow-xl ring-1 ring-white/30">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-semibold text-[#ff7fa6]">Stage 2 - Take turns</p>
-              <h2 className="text-2xl font-semibold">Answer live, one at a time</h2>
-              <p className="text-sm text-slate-600">When both mark a question done, the next one appears automatically.</p>
+              <div className="text-2xl mb-2">💬</div>
+              <h2 className="text-2xl font-bold">Time to answer!</h2>
+              <p className="text-sm text-slate-600">Take turns answering. Your partner can watch you type live!</p>
             </div>
-            <div className="rounded-full bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700">
-              {currentAnsweringPlayer ? `${currentAnsweringPlayer.name}'s turn` : "Preparing..."}
+            <div className="rounded-full bg-[#fff5f9] border-2 border-[#ffafc4] px-4 py-2">
+              <p className="text-sm font-bold text-slate-900">
+                {isMyTurn ? "Your turn! 🎯" : `${currentAnsweringPlayer?.name}'s turn`}
+              </p>
             </div>
           </div>
 
           {current ? (
-            <div className="mt-4 space-y-4 rounded-2xl border border-slate-200 bg-white p-4">
-              <p className="text-sm font-semibold text-slate-800">{current.text}</p>
-              <p className="text-xs text-slate-500">Answering: {currentAnsweringPlayer?.name ?? "TBD"}</p>
-              <p className="text-xs text-slate-500">
-                {writerDone ? "Writer done" : isWriter ? "Your turn to type" : "They are typing"} •{" "}
-                {readerDone ? "Reader done" : !isWriter ? "Your turn to read" : "They will confirm when read"}
-              </p>
+            <div className="mt-4 space-y-4 rounded-2xl border-2 border-slate-200 bg-white p-5">
+              <div className="rounded-xl bg-[#fff5f9] p-4">
+                <p className="text-xs font-semibold text-[#ff7fa6] uppercase mb-1">Question</p>
+                <p className="text-lg font-bold text-slate-900">{current.text}</p>
+              </div>
 
-              {isWriter ? (
-                <div className="space-y-2">
-                  <textarea
-                    value={draftAnswers[current.id] ?? current.answer_text ?? ""}
-                    onChange={(e) => saveAnswer(current, e.target.value)}
-                    placeholder="Type your answer..."
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none ring-2 ring-transparent focus:ring-[#ffafc4]"
-                    rows={4}
-                    disabled={writerDone}
-                  />
+              {isMyTurn ? (
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-700 mb-2">Your answer:</p>
+                    <textarea
+                      value={draftAnswers[current.id] ?? current.answer_text ?? ""}
+                      onChange={(e) => saveAnswer(current, e.target.value)}
+                      placeholder="Type your answer here... your partner is watching! 👀"
+                      className="w-full rounded-xl border-2 border-slate-200 bg-white px-4 py-3 text-base outline-none ring-2 ring-transparent focus:ring-[#ffafc4] focus:border-[#ffafc4]"
+                      rows={5}
+                      disabled={answerSubmitted}
+                    />
+                  </div>
                   <button
                     onClick={() => markWriterDone(current)}
-                    className={`rounded-xl px-4 py-2 text-sm font-semibold text-white transition ${
-                      writerDone
+                    className={`w-full rounded-xl px-4 py-3 text-base font-bold text-white transition ${
+                      answerSubmitted
                         ? "bg-green-600 hover:opacity-90"
-                        : "bg-slate-900 hover:opacity-90 shadow shadow-slate-200/60"
+                        : "bg-gradient-to-r from-[#ffafc4] to-[#ff7fa6] text-slate-900 hover:scale-[1.02] shadow-lg"
                     }`}
-                    disabled={writerDone || !(draftAnswers[current.id] ?? current.answer_text)?.trim()}
+                    disabled={answerSubmitted || !(draftAnswers[current.id] ?? current.answer_text)?.trim()}
                   >
-                    {writerDone ? "Done" : "Mark my answer as done"}
+                    {answerSubmitted ? "Answer submitted! ✓" : "Submit answer"}
                   </button>
-                  {writerDone && !readerDone && (
-                    <p className="text-xs text-slate-500">Waiting for your partner to read.</p>
+                  {answerSubmitted && !partnerConfirmed && (
+                    <p className="text-sm text-slate-600 text-center">Waiting for {currentAnsweringPlayer?.name === currentPlayer.name ? "your partner" : currentAnsweringPlayer?.name} to read your answer...</p>
                   )}
                 </div>
               ) : (
-                <div className="space-y-2 rounded-xl bg-slate-50 p-3 text-sm text-slate-700">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Live typing</p>
-                  <p className="min-h-[80px] whitespace-pre-wrap">
-                    {draftAnswers[current.id] ?? current.answer_text ?? "Waiting for their answer..."}
-                  </p>
+                <div className="space-y-3">
+                  <div className="rounded-xl bg-slate-50 p-4 border-2 border-slate-200">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-base">✍️</span>
+                      <p className="text-sm font-semibold text-slate-700">{currentAnsweringPlayer?.name} is typing...</p>
+                    </div>
+                    <p className="min-h-[100px] whitespace-pre-wrap text-base text-slate-800">
+                      {draftAnswers[current.id] ?? current.answer_text ?? "Waiting for their answer..."}
+                    </p>
+                  </div>
                   <button
                     onClick={() => markReaderDone(current)}
-                    className={`rounded-xl px-4 py-2 text-sm font-semibold text-white transition ${
-                      readerDone
+                    className={`w-full rounded-xl px-4 py-3 text-base font-bold text-white transition ${
+                      partnerConfirmed
                         ? "bg-green-600 hover:opacity-90"
-                        : "bg-slate-900 hover:opacity-90 shadow shadow-slate-200/60"
+                        : "bg-slate-900 hover:scale-[1.02]"
                     }`}
-                    disabled={!((draftAnswers[current.id] ?? current.answer_text)?.trim()) || readerDone}
+                    disabled={!((draftAnswers[current.id] ?? current.answer_text)?.trim()) || partnerConfirmed}
                   >
-                    {readerDone ? "Done" : "I read it"}
+                    {partnerConfirmed ? "Confirmed! ✓" : "I read it, next question!"}
                   </button>
-                  {readerDone && !writerDone && (
-                    <p className="text-xs text-slate-500">Waiting for them to mark their answer as done.</p>
+                  {partnerConfirmed && !answerSubmitted && (
+                    <p className="text-sm text-slate-600 text-center">Waiting for {currentAnsweringPlayer?.name} to finish...</p>
                   )}
                 </div>
               )}
             </div>
           ) : (
-            <p className="text-sm text-slate-600">Getting the next question ready...</p>
+            <p className="text-sm text-slate-600 text-center py-4">Getting ready...</p>
           )}
         </div>
 
-        <div className="rounded-3xl bg-white/5 p-4 text-sm text-white/80 ring-1 ring-white/10">
-          Progress: {sorted.filter(isDone).length}/{sorted.length} done. When all are completed, you'll see a recap.
+        <div className="rounded-3xl bg-white/5 p-4 ring-1 ring-white/10">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">📊</span>
+              <p className="text-sm font-semibold text-white">Progress</p>
+            </div>
+            <p className="text-base font-bold text-white">{completedCount}/{totalCount} answered</p>
+          </div>
+          <div className="mt-2 h-2 rounded-full bg-white/10 overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-[#ffafc4] to-[#ff7fa6] transition-all duration-500"
+              style={{ width: `${(completedCount / totalCount) * 100}%` }}
+            />
+          </div>
         </div>
       </section>
     );
@@ -656,21 +700,35 @@ export default function RoomPage() {
     const ordered = getAssignedOrder();
     return (
       <section className="rounded-3xl bg-white/90 p-5 text-slate-900 shadow-xl ring-1 ring-white/30">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-sm font-semibold text-[#ff7fa6]">Stage 3 - Recap</p>
-            <h2 className="text-2xl font-semibold">All answers</h2>
-            <p className="text-sm text-slate-600">Read through everything together.</p>
-          </div>
+        <div className="space-y-2">
+          <div className="text-3xl">🎉</div>
+          <h2 className="text-2xl font-bold">You did it!</h2>
+          <p className="text-sm text-slate-600">Here's everything you both shared. Take your time reading through!</p>
         </div>
-        <div className="mt-4 space-y-3">
-          {ordered.map((q) => (
-            <div key={q.id} className="rounded-2xl border border-slate-200 bg-white p-4">
-              <p className="text-sm font-semibold text-slate-900">{q.text}</p>
-              <p className="text-xs text-slate-500">Answered by {playerName(q.answering_player_id)}</p>
-              <p className="mt-2 whitespace-pre-wrap text-sm text-slate-700">{q.answer_text ?? "No answer"}</p>
+        <div className="mt-5 space-y-4">
+          {ordered.map((q, index) => (
+            <div key={q.id} className="rounded-2xl border-2 border-slate-200 bg-white p-5 hover:shadow-lg transition-shadow">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#fff5f9] flex items-center justify-center">
+                  <span className="text-sm font-bold text-[#ff7fa6]">{index + 1}</span>
+                </div>
+                <div className="flex-1 space-y-3">
+                  <p className="text-base font-bold text-slate-900">{q.text}</p>
+                  <div className="rounded-xl bg-slate-50 p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-base">{playerName(q.answering_player_id) === players[0]?.name ? "👤" : "❤️"}</span>
+                      <p className="text-xs font-semibold text-slate-600">{playerName(q.answering_player_id)} answered:</p>
+                    </div>
+                    <p className="whitespace-pre-wrap text-base text-slate-800">{q.answer_text || "No answer provided"}</p>
+                  </div>
+                </div>
+              </div>
             </div>
           ))}
+        </div>
+        <div className="mt-5 rounded-2xl bg-[#fff5f9] border-2 border-[#ffafc4] p-4 text-center">
+          <p className="text-base font-semibold text-slate-900">🎮 Want to play again?</p>
+          <p className="text-sm text-slate-600 mt-1">Head back to the home page to start a new room!</p>
         </div>
       </section>
     );

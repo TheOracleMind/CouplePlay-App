@@ -16,23 +16,23 @@ const games: Array<{
   title: string;
   gist: string;
   detail: string;
-  badge: string;
+  emoji: string;
 }> = [
   {
     slug: "random-questions",
     title: "Random Questions",
-    gist: "Build a shared list of prompts, then answer live in turns.",
+    emoji: "💭",
+    gist: "Ask anything, answer together, and see what you both think.",
     detail:
-      "Stage 1: add questions together (optionally hidden). Stage 2: take turns answering while your partner watches live.",
-    badge: "Live typing • Turn-based",
+      "First, you both add questions (keep them secret if you want!). Then, take turns answering while your partner watches you type.",
   },
   {
     slug: "idea-matching",
     title: "Idea Matching",
-    gist: "Mark what you are both into and reveal your overlaps only.",
+    emoji: "✨",
+    gist: "Find out what you're both into without the awkward reveals.",
     detail:
-      "Each person votes yes/no on a shuffled list (custom or preset). Only the ideas you both like are revealed at the end.",
-    badge: "Private votes • Shared wins",
+      "Each of you votes yes or no on ideas. Only the ones you BOTH like get revealed at the end. Perfect for discovering shared interests!",
   },
 ];
 
@@ -99,35 +99,21 @@ export default function Home() {
         <div className="rounded-3xl bg-gradient-to-br from-[#1b2437] via-[#141c2f] to-[#0f172a] p-6 shadow-[0_20px_70px_rgba(0,0,0,0.4)] sm:p-8">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-3">
-              <p className="inline-flex items-center rounded-full bg-white/10 px-4 py-2 text-sm font-medium uppercase tracking-wide text-white/80">
-                Cozy two-player rooms
-              </p>
-              <h1 className="text-3xl font-semibold text-white sm:text-4xl">
-                CouplePlay brings playful prompts to you and your partner.
+              <h1 className="text-3xl font-bold text-white sm:text-4xl">
+                Play together, anytime 💕
               </h1>
-              <p className="max-w-2xl text-lg text-white/75">
-                Create a private room, invite your partner, and dive into lighthearted
-                question rounds or idea-matching sessions. Mobile-first and live by
-                design.
+              <p className="max-w-2xl text-lg text-white/85">
+                Fun games designed for couples. Start a room, share the link with your partner, and enjoy some quality time together.
               </p>
-              <div className="flex flex-wrap gap-3 text-sm text-white/80">
-                <span className="rounded-full bg-white/10 px-4 py-2">1-hour auto cleanup</span>
-                <span className="rounded-full bg-white/10 px-4 py-2">Live presence</span>
-                <span className="rounded-full bg-white/10 px-4 py-2">No downloads</span>
-              </div>
             </div>
-            <div className="relative mt-4 w-full max-w-xs overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-4 text-white shadow-lg backdrop-blur sm:mt-0">
+            <div className="relative mt-4 w-full max-w-xs overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-5 text-white shadow-lg backdrop-blur sm:mt-0">
               <div className="absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full bg-pink-300/30 blur-3xl" />
-              <div className="relative space-y-2">
-                <p className="text-sm uppercase tracking-wide text-white/70">Tonight&apos;s vibe</p>
-                <h2 className="text-xl font-semibold">Two hearts, one room</h2>
+              <div className="relative space-y-2 text-center">
+                <div className="text-3xl">🎮</div>
+                <h2 className="text-xl font-semibold">Ready to play?</h2>
                 <p className="text-sm text-white/80">
-                  Start a room, share the link, and play together in seconds.
+                  Pick a game below and create your private room!
                 </p>
-                <div className="mt-3 flex items-center gap-2 text-sm text-white/75">
-                  <span className="h-2 w-2 animate-pulse rounded-full bg-green-300" />
-                  Room links stay alive for 60 minutes of inactivity.
-                </div>
               </div>
             </div>
           </div>
@@ -135,15 +121,9 @@ export default function Home() {
 
         <div className="grid gap-6 md:grid-cols-[1.2fr_1fr]">
           <section className="rounded-3xl bg-white/90 p-6 shadow-xl backdrop-blur-lg ring-1 ring-white/30">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold text-[#ff7fa6]">Step 1</p>
-                <h2 className="text-2xl font-semibold text-slate-900">Start a room</h2>
-                <p className="text-sm text-slate-600">Name yourself, pick a game, and send the invite link.</p>
-              </div>
-              <span className="rounded-full bg-[#fff0f4] px-3 py-2 text-xs font-medium text-[#bf4776]">
-                Host view
-              </span>
+            <div className="space-y-1">
+              <h2 className="text-2xl font-bold text-slate-900">Create your room</h2>
+              <p className="text-sm text-slate-600">Enter your name, pick a game, and get your invite link!</p>
             </div>
 
             <div className="mt-5 space-y-4">
@@ -165,33 +145,28 @@ export default function Home() {
                     onClick={() => setGame(item.slug)}
                     className={`relative flex h-full flex-col items-start gap-2 rounded-2xl border p-4 text-left transition hover:-translate-y-0.5 hover:shadow-lg ${
                       game === item.slug
-                        ? "border-[#ffafc4] bg-[#fff5f9] shadow-lg"
+                        ? "border-[#ffafc4] bg-[#fff5f9] shadow-lg ring-2 ring-[#ffafc4]/50"
                         : "border-slate-200 bg-white"
                     }`}
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="rounded-full bg-[#ffe4ed] px-3 py-1 text-xs font-semibold text-[#bf4776]">
-                        {item.badge}
-                      </span>
-                    </div>
+                    <div className="text-2xl">{item.emoji}</div>
                     <div>
-                      <p className="text-sm font-semibold text-slate-900">{item.title}</p>
-                      <p className="text-sm text-slate-600">{item.gist}</p>
+                      <p className="text-base font-bold text-slate-900">{item.title}</p>
+                      <p className="text-sm text-slate-600 mt-1">{item.gist}</p>
                     </div>
-                    <p className="text-xs text-slate-500">{item.detail}</p>
                   </button>
                 ))}
               </div>
 
               {game === "random-questions" && (
-                <label className="flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm font-medium text-slate-800">
+                <label className="flex items-center gap-3 rounded-2xl bg-[#fff5f9] border border-[#ffafc4]/30 px-4 py-3 text-sm font-medium text-slate-800 cursor-pointer hover:bg-[#fff0f4] transition">
                   <input
                     type="checkbox"
                     checked={hideQuestions}
                     onChange={(e) => setHideQuestions(e.target.checked)}
                     className="h-5 w-5 rounded-md border-slate-300 text-[#ff7fa6] focus:ring-[#ff7fa6]"
                   />
-                  Hide my partner&apos;s questions while we add them
+                  <span>Keep questions secret until we start answering 🤫</span>
                 </label>
               )}
 
@@ -199,9 +174,9 @@ export default function Home() {
                 type="button"
                 onClick={handleCreate}
                 disabled={creating || !hostName.trim()}
-                className="w-full rounded-2xl bg-gradient-to-r from-[#ffafc4] to-[#ff7fa6] px-4 py-3 text-center text-base font-semibold text-slate-900 shadow-lg shadow-[#ffafc4]/40 transition hover:scale-[1.01] disabled:scale-100 disabled:cursor-not-allowed disabled:opacity-60"
+                className="w-full rounded-2xl bg-gradient-to-r from-[#ffafc4] to-[#ff7fa6] px-4 py-3 text-center text-base font-bold text-slate-900 shadow-lg shadow-[#ffafc4]/40 transition hover:scale-[1.02] hover:shadow-xl disabled:scale-100 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {creating ? "Creating room..." : "Create room & get link"}
+                {creating ? "Creating your room... ✨" : "Create room 🎮"}
               </button>
 
               {error && (
@@ -211,23 +186,26 @@ export default function Home() {
               )}
 
               {inviteLink && (
-                <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-sm font-semibold text-slate-800">Share this link</p>
-                  <p className="break-all rounded-xl bg-white px-3 py-2 text-sm text-slate-700 ring-1 ring-slate-200">
+                <div className="space-y-3 rounded-2xl border-2 border-[#ffafc4] bg-[#fff5f9] p-4 animate-fade-in">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">🎉</span>
+                    <p className="text-sm font-bold text-slate-800">Room ready! Share with your partner:</p>
+                  </div>
+                  <p className="break-all rounded-xl bg-white px-3 py-2 text-sm text-slate-700 ring-1 ring-[#ffafc4]/30">
                     {inviteLink}
                   </p>
                   <div className="flex gap-3">
                     <button
                       onClick={copyLink}
-                      className="flex-1 rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+                      className="flex-1 rounded-xl bg-slate-900 px-3 py-2 text-sm font-bold text-white transition hover:scale-[1.02]"
                     >
-                      {copied ? "Copied!" : "Copy link"}
+                      {copied ? "Copied! ✓" : "Copy link"}
                     </button>
                     <Link
                       href={inviteLink}
-                      className="flex-1 rounded-xl border border-slate-300 px-3 py-2 text-center text-sm font-semibold text-slate-800 transition hover:border-[#ff7fa6]"
+                      className="flex-1 rounded-xl bg-gradient-to-r from-[#ffafc4] to-[#ff7fa6] px-3 py-2 text-center text-sm font-bold text-slate-900 transition hover:scale-[1.02]"
                     >
-                      Open room
+                      Enter room
                     </Link>
                   </div>
                 </div>
@@ -236,65 +214,60 @@ export default function Home() {
           </section>
 
           <section className="rounded-3xl bg-[#0f172a] p-6 text-white shadow-2xl ring-1 ring-white/10">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold text-[#ffafc4]">Step 2</p>
-                <h2 className="text-2xl font-semibold">Your partner joins</h2>
-                <p className="text-sm text-white/75">They tap the link, enter their name, and you start playing.</p>
+            <div className="space-y-2">
+              <div className="text-3xl">💌</div>
+              <h2 className="text-2xl font-bold">How it works</h2>
+            </div>
+
+            <div className="mt-6 space-y-4">
+              <div className="flex gap-3 items-start">
+                <span className="text-xl">1️⃣</span>
+                <div>
+                  <p className="font-semibold text-white">Create your room</p>
+                  <p className="text-sm text-white/75">Pick a game and get your link</p>
+                </div>
               </div>
-              <span className="rounded-full bg-white/10 px-3 py-2 text-xs font-medium text-white/80">
-                Guest view
-              </span>
+              <div className="flex gap-3 items-start">
+                <span className="text-xl">2️⃣</span>
+                <div>
+                  <p className="font-semibold text-white">Share with your partner</p>
+                  <p className="text-sm text-white/75">They tap the link and enter their name</p>
+                </div>
+              </div>
+              <div className="flex gap-3 items-start">
+                <span className="text-xl">3️⃣</span>
+                <div>
+                  <p className="font-semibold text-white">Play together!</p>
+                  <p className="text-sm text-white/75">Have fun and enjoy quality time</p>
+                </div>
+              </div>
             </div>
 
-            <div className="mt-6 space-y-4 rounded-2xl bg-white/5 p-4 ring-1 ring-white/10">
-              <p className="text-sm font-semibold text-white">How it flows</p>
-              <ul className="space-y-3 text-sm text-white/80">
-                <li>• Tap the shared link to land in the room.</li>
-                <li>• Enter your name to join as the second player.</li>
-                <li>• Stage 1 depends on the game (questions vs. ideas).</li>
-                <li>• Stage 2: take turns answering or voting.</li>
-                <li>• Stage 3: view your shared recap.</li>
-              </ul>
-            </div>
-
-            <div className="mt-4 rounded-2xl bg-[#111c31] p-4 text-sm text-white/80 ring-1 ring-white/5">
-              Rooms auto-expire after an hour of inactivity. If you need to restart, just create a fresh room—the flow
-              is only a few taps.
+            <div className="mt-4 rounded-2xl bg-white/5 p-4 text-sm text-white/70 ring-1 ring-white/5">
+              <span className="font-semibold text-white/90">💡 Tip:</span> Rooms stay active while you're playing and close after being idle for an hour.
             </div>
           </section>
         </div>
 
         <section className="rounded-3xl bg-white/90 p-6 shadow-xl backdrop-blur-lg ring-1 ring-white/30">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm font-semibold text-[#ff7fa6]">Games</p>
-              <h3 className="text-2xl font-semibold text-slate-900">Pick your mood</h3>
-              <p className="text-sm text-slate-600">Designed to keep things light, honest, and playful.</p>
-            </div>
-            <span className="rounded-full bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-700">
-              Mobile-first layout
-            </span>
+          <div className="space-y-1">
+            <h3 className="text-2xl font-bold text-slate-900">Our games</h3>
+            <p className="text-sm text-slate-600">Pick the vibe that fits your mood!</p>
           </div>
 
           <div className="mt-5 grid gap-4 md:grid-cols-2">
             {games.map((item) => (
               <div
                 key={item.slug}
-                className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-lg"
+                className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-lg hover:shadow-xl transition-shadow"
               >
                 <div className="absolute right-0 top-0 h-24 w-24 rounded-full bg-[#ffafc4]/30 blur-3xl" />
-                <div className="relative space-y-2">
-                  <div className="flex items-center gap-2">
-                    <span className="rounded-full bg-[#ffe4ed] px-3 py-1 text-xs font-semibold text-[#bf4776]">
-                      {item.badge}
-                    </span>
-                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                      {item.slug === "random-questions" ? "Stages: Collect → Answer → Recap" : "Stages: Collect/Vote → Reveal"}
-                    </span>
+                <div className="relative space-y-3">
+                  <div className="text-3xl">{item.emoji}</div>
+                  <div>
+                    <h4 className="text-lg font-bold text-slate-900">{item.title}</h4>
+                    <p className="text-sm text-slate-700 mt-1">{item.detail}</p>
                   </div>
-                  <h4 className="text-lg font-semibold text-slate-900">{item.title}</h4>
-                  <p className="text-sm text-slate-700">{item.detail}</p>
                 </div>
               </div>
             ))}

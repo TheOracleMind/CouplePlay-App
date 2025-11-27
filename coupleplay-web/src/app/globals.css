@@ -29,6 +29,10 @@ body {
   animation: fade-in 0.35s ease;
 }
 
+.animate-fade-in {
+  animation: fade-in 0.35s ease;
+}
+
 .turn-pop {
   animation: turn-pop 0.45s ease;
 }

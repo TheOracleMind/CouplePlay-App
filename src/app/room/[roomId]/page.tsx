@@ -33,6 +33,12 @@ export default function RoomPage() {
   const [loadingSuggestion, setLoadingSuggestion] = useState(false);
 
   const stageStartedRef = useRef(false);
+  const currentPlayerIdRef = useRef(currentPlayerId);
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    currentPlayerIdRef.current = currentPlayerId;
+  }, [currentPlayerId]);
 
   useEffect(() => {
     if (currentPlayerId) {
@@ -119,7 +125,8 @@ export default function RoomPage() {
       if (!current) return;
       const writerDraft = draftAnswers[current.id] ?? "";
       const lastSent = lastSentAnswers[current.id] ?? "";
-      const isWriter = currentPlayerId && current.answering_player_id === currentPlayerId;
+      const myPlayerId = currentPlayerIdRef.current; // Use ref for latest value
+      const isWriter = myPlayerId && current.answering_player_id === myPlayerId;
       if (isWriter && writerDraft !== lastSent) {
         setLastSentAnswers((prev) => ({ ...prev, [current.id]: writerDraft }));
         await fetch(`/api/rooms/${roomId}/questions/${current.id}/answer`, {
@@ -130,7 +137,7 @@ export default function RoomPage() {
       }
     }, 500); // Reduced from 1000ms to 500ms for more responsive live typing
     return () => clearInterval(interval);
-  }, [supabase, roomId, room?.current_question_id, draftAnswers, lastSentAnswers, currentPlayerId, questions]);
+  }, [supabase, roomId, room?.current_question_id, draftAnswers, lastSentAnswers, questions]);
 
   function playerName(playerId?: string | null) {
     if (!playerId) return "Unknown";
@@ -195,14 +202,18 @@ export default function RoomPage() {
       setQuestions(fetchedQuestions);
       setDraftAnswers((prev) => {
         const next = { ...prev };
+        const myPlayerId = currentPlayerIdRef.current; // Use ref for latest value
         fetchedQuestions.forEach((q) => {
           if (typeof q.answer_text === "string") {
             // CRITICAL: Only update draft answers for questions being answered by OTHER players
             // This prevents database updates from overwriting the writer's active typing
-            if (q.answering_player_id !== currentPlayerId) {
+            const isMyQuestion = q.answering_player_id === myPlayerId;
+            const hasDraft = prev[q.id] !== undefined && prev[q.id] !== null;
+
+            if (!isMyQuestion) {
               // It's the other player's turn - always update to show live typing
               next[q.id] = q.answer_text;
-            } else if (prev[q.id] === undefined || prev[q.id] === null) {
+            } else if (!hasDraft) {
               // It's my turn but I haven't started typing yet - initialize from database
               // Only initialize if there's NO previous draft (not even empty string)
               next[q.id] = q.answer_text;
@@ -249,7 +260,10 @@ export default function RoomPage() {
             );
             // ONLY update draft answers for questions being answered by OTHER players (reader view)
             // NEVER update draft answers for questions the current player is answering (writer view)
-            if (updatedQuestion.answering_player_id !== currentPlayerId) {
+            const myPlayerId = currentPlayerIdRef.current; // Use ref for latest value
+            const isMyQuestion = updatedQuestion.answering_player_id === myPlayerId;
+
+            if (!isMyQuestion) {
               setDraftAnswers((prev) => ({
                 ...prev,
                 [updatedQuestion.id]: updatedQuestion.answer_text ?? "",
